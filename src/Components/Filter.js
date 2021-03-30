@@ -193,7 +193,7 @@ class Filter extends React.Component {
     
         axios({
             method: 'POST',
-            url: 'https://afternoon-beach-59724.herokuapp.com//filter',
+            url: 'https://afternoon-beach-59724.herokuapp.com/filter',
             headers: { 'Content-Type': 'application/json' },
             data: {
                 sort: sort,
