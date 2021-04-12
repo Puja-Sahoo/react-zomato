@@ -5,7 +5,8 @@ import axios from 'axios';
 import Modal from 'react-modal';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from 'react-responsive-carousel';
-
+//import { Rating } from '@material-ui/lab';
+import ReactStars from "react-rating-stars-component";
 
 const customStyles = {
     content: {
@@ -63,7 +64,10 @@ class Details extends React.Component {
             userName: undefined,
             contactNumber: undefined,
             address: undefined,
-            email: undefined
+            email: undefined,
+            type:undefined,
+            message:undefined,
+            messageModalIsOpen:false
         }
     }
 
@@ -80,6 +84,40 @@ class Details extends React.Component {
                 this.setState({ restaurant: res.data.restaurant , restaurantId:resId })
                 {/*the output of this api call will be an object */}
             }).catch(err => console.log(err))
+    }
+
+//checking form credentials
+formCheck = (event)=>{
+    event.preventDefault()
+    const{contactNumber,userName,email,address}=this.state
+    if(contactNumber==undefined && userName==undefined && email==undefined && address==undefined )
+    {
+        this.setState({message:"Please enter the details", messageModalIsOpen: true})
+
+    }
+    // else{
+    //     this.makePayment
+    // }
+
+}
+
+
+    // handle type of the order form veg/non-veg/all
+    handleTypeChange =(type)=>{
+        const { restaurantId,menuItems } = this.state;
+        if(type == "All"){
+            this.setState({menuItems:menuItems})
+    
+        }
+      else if(type=="veg"){
+            const vegItems = menuItems.filter(item => item.type=="veg")
+            this.setState({menuItems:vegItems})
+      }
+      else if(type=="non-veg"){
+        const nonVegItems = menuItems.filter(item => item.type=="non-veg")
+        this.setState({menuItems:nonVegItems})
+  }
+      
     }
 
     handleClick = (state, value) => {
@@ -173,6 +211,14 @@ class Details extends React.Component {
     }
 
     makePayment = (e) => {
+        e.preventDefault()
+        const{contactNumber,userName,email,address}=this.state
+    if(contactNumber==undefined && userName==undefined && email==undefined && address==undefined )
+    {
+        this.setState({message:"Please enter the details", messageModalIsOpen: true})
+
+    }
+    else{
         const { subTotal, email } = this.state;
         this.getData({ amount: subTotal, email: email }).then(response => { //passing the response captured by getdata to another api
             var information = {
@@ -184,10 +230,21 @@ class Details extends React.Component {
         e.preventDefault();
     }
 
+        // const { subTotal, email } = this.state;
+        // this.getData({ amount: subTotal, email: email }).then(response => { //passing the response captured by getdata to another api
+        //     var information = {
+        //         action: "https://securegw-stage.paytm.in/order/process",
+        //         params: response
+        //     }
+        //     this.post(information);
+        // })
+        // e.preventDefault();
+    }
+
         
 
     render() {
-        const { restaurant, galleryModalIsOpen, orderModalIsOpen, menuItems, subTotal, formModalIsOpen, userName,contactNumber,address,email} = this.state;{/*destructuring of data*/}
+        const { restaurant, galleryModalIsOpen, orderModalIsOpen, menuItems, subTotal, formModalIsOpen, userName,contactNumber,address,email,messageModalIsOpen,message} = this.state;{/*destructuring of data*/}
         return (
             <div>
                 <div>
@@ -240,22 +297,40 @@ class Details extends React.Component {
                         </Carousel>
                     </div>
                 </Modal>
-                <Modal
+                <Modal 
                     isOpen={orderModalIsOpen}
                     style={customStyles}
                 >
                     <div className="container">
                         <div style={{ float: 'right' }} onClick={() => this.handleClick('orderModalIsOpen', false)}><i class="fa fa-times fa-2x" aria-hidden="true" style={ {color: 'white'} } ></i></div> 
-                        <h3 className="restaurant-name">{restaurant.name}</h3>
-                        <h3>SubTotal : {subTotal}</h3>
-                        <button className="btn btn-danger pay" onClick={() => this.handleClick('formModalIsOpen', true)}> Pay Now</button>
+                        <h3 className="restaurant-name" style={{fontWeight:"700"}}>{restaurant.name}</h3>
+                        <div class="btn-group">
+                        <button type="button" class="btn btn-success" onClick={() =>  this.handleTypeChange("veg") }>Veg</button>
+                        <button type="button" class="btn btn-danger" onClick={() => this.handleTypeChange("non-veg")}>Non-Veg</button>
+                        <button type="button" class="btn btn-secondary" onClick={() => this.handleTypeChange("All") }>All</button>
+                        </div>
+                        {/*<Rating name="half-rating-read" value={restaurant.aggregate_rating} precision={0.1} readOnly />*/}
+                        <ReactStars
+                          count={5}
+                          
+                          size={24}
+                          activeColor="#ffd700"
+                          isHalf={true}
+                          value={restaurant.aggregate_rating}
+                          edit={false}
+                         />
                         {menuItems.map((item, index) => {
                             return <div style={{ width: '44rem', marginTop: '10px', marginBottom: '10px', borderBottom: '2px solid #dbd8d8' }}>
                                 <div className="card" style={{ width: '43rem', margin: 'auto' }}>
                                     <div className="row" style={{ paddingLeft: '10px', paddingBottom: '10px' }}>
                                         <div className="col-xs-9 col-sm-9 col-md-9 col-lg-9 " style={{ paddingLeft: '10px', paddingBottom: '10px' }}>
                                             <span className="card-body">
-                                                <h5 className="item-name">{item.name}</h5>
+                                                <span style={ {marginLeft: "-18px" } }>
+                                                <h5 className="item-name"  style={ {display: 'inline' , marginRight: "5px"} }>{item.name}</h5> 
+                                                { item.type=="veg" ? <img src="https://www.clipartmax.com/png/small/206-2065891_soups-and-salads-veg-logo-png.png" alt="" height="25px" width="25px" style={ {display: 'inline'} }></img>
+                                                :<img src="https://www.clipartmax.com/png/small/277-2772681_non-veg-symbol-non-veg-mark.png" alt="" height="25px" width="25px" style={ {display: 'inline'} }></img>}
+                                                </span>
+                                               
                                                 <h5 className="item-name">&#8377;{item.price}</h5>
                                                 <p className="card-text">{item.description}</p>
                                             </span>
@@ -267,8 +342,15 @@ class Details extends React.Component {
                                     </div>
                                 </div>
                             </div>
+                            
                         })}
-                        <div className="card" style={{ width: '44rem', marginTop: '10px', marginBottom: '10px', margin: 'auto' }}>
+
+                        <div className="card-footer" style={{ width: '44rem', marginTop: '10px', marginBottom: '10px', margin: 'auto' }}>
+                            <span>
+                            <h3 style={{display:"inline", color:"white"}}>SubTotal : {subTotal}</h3>
+                            <button className="btn btn-danger pay" style={{display:"inline"}} onClick={() => this.handleClick('formModalIsOpen', true)}> Pay Now</button>
+                            </span>
+                        
 
                         </div>
                         </div>
@@ -286,24 +368,33 @@ class Details extends React.Component {
                             <table>
                                 <tr>
                                     <td>Name</td>
-                                    <td><input type="text" value={userName} onChange={(event) => this.handleInputChange(event, 'userName')} /></td>
+                                    <td><input type="text" value={userName} onChange={(event) => this.handleInputChange(event, 'userName')} required /></td>
                                 </tr>
                                 <tr>
-                                    <td>Conatct Number</td>
-                                    <td><input type="text" value={contactNumber} onChange={(event) => this.handleInputChange(event, 'contactNumber')} /></td>
+                                    <td>Contact Number</td>
+                                    <td><input type="text" value={contactNumber} onChange={(event) => this.handleInputChange(event, 'contactNumber')} required /></td>
                                 </tr>
                                 <tr>
                                     <td>Address</td>
-                                    <td><input type="text" value={address} onChange={(event) => this.handleInputChange(event, 'address')} /></td>
+                                    <td><input type="text" value={address} onChange={(event) => this.handleInputChange(event, 'address')} required/></td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
-                                    <td><input type="text" value={email} onChange={(event) => this.handleInputChange(event, 'email')} /></td>
+                                    <td><input type="email" value={email} onChange={(event) => this.handleInputChange(event, 'email')} required /></td>
                                 </tr>
                             </table>
-                            <input type="submit" className="btn btn-danger" value="Proceed" />
+                            <input type="submit" className="btn btn-danger" value="Proceed"  onClick={() => this.formCheck}/>
                         </form>
                     </div>
+                </Modal>
+                <Modal
+                    isOpen={messageModalIsOpen}
+                    style={customStyles}
+                >
+                    <div style={{ textAlign: "right" }} onClick={() => this.handleClick('messageModalIsOpen', false)}><i class="fa fa-times fa-2x" aria-hidden="true" style={ {color: 'white'} } ></i></div>
+
+                    <div style={{color:"white", padding:"20px 20px 20px 20px"}}><b><u>{message}</u></b></div>
+
                 </Modal>
             </div>
         )
